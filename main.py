@@ -4,7 +4,7 @@ import time
 import asyncio
 import threading
 from websockets.server import serve
-from soil_handler import SoilInfo, calculate_goodness
+from soil import SoilInfo, calculate_goodness
 from data_grapher import update_plot
 import matplotlib
 
