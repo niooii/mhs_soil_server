@@ -2,26 +2,30 @@ import random
 
 
 class SoilInfo:
-    coord_x: int = 0
-    coord_y: int = 0
     moisture: float = 0
     temperature: float = 0
     air_quality: float = 0
 
     ## message should be recieved in this format:
     def __init__(self, message: str):
+        print(f"recv message: {message}")
         data = message.split(",")
-        self.coord_x = int(data[0])
-        self.coord_y = int(data[1])
-        print(f"{self.coord_x}, {self.coord_y}")
-        self.temperature = float(data[2])
-        self.moisture = float(data[3])
+        self.temperature = float(data[0])
+        self.moisture = float(data[1])
 
 
 def calculate_goodness(soil_info: SoilInfo) -> float:
-    print(f"calculating goodness for values:\n "
-          f"temperature: {soil_info.temperature}\n"
-          f"moisture: {soil_info.moisture}\n"
-          f"air quality: {soil_info.air_quality}")
-    goodness: float = soil_info.temperature / float(10)
+    # print    print(f"INDEX: {index}")
+
+    if soil_info.temperature > 40 or soil_info.temperature < 10 or soil_info.moisture == 0:
+        return 0
+
+    TempFactor = abs(soil_info.temperature - 26.5) / 20.0
+    MoistureFactor = abs(soil_info.moisture - 400.0) / 500.0
+
+    goodness: float = (Lerp(1, 0, TempFactor) + Lerp(1, 0, MoistureFactor)) / 2
     return goodness
+
+
+def Lerp(a: float, b: float, t: float) -> float:
+    return a + (b - a) * t

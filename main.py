@@ -12,17 +12,30 @@ import serial
 
 app = Flask(__name__)
 
+import logging
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
+
 arduino = serial.Serial(port='/dev/ttyACM0', baudrate=115200, timeout=.1)
+
 
 # routes for host:25565
 @app.route('/plot', methods=['GET'])
 def get_plot():
-    return Response(get_plot_data(), mimetype='text/plain')
+    response = Response(get_plot_data())
+    response.mimetype = 'text/plain'
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
+
+
+time_since_last_read: float = time.time()
 
 
 def arduino_read_loop():
+    global time_since_last_read
     while True:
-        time.sleep(0.2)
+        # if time.time() - time_since_last_read < 0.1:
+        #     continue
         data = arduino.readline()
         if len(data) == 0:
             continue
@@ -31,10 +44,12 @@ def arduino_read_loop():
         soil_goodness: float = calculate_goodness(soil_info)
         print(f"soil goodness: {soil_goodness}")
         print("plot updated...")
-        update_plot(soil_info, soil_goodness)
+        update_plot(soil_goodness, False)
+        time_since_last_read = time.time()
 
 
 async def main():
+    update_plot(0, True)
     # run websock loop and updates plot data
     t1 = threading.Thread(target=arduino_read_loop, args=())
     t1.daemon = True
