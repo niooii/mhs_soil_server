@@ -28,7 +28,7 @@ async def main():
     t1 = threading.Thread(target=update_plot, args=())
     t1.daemon = True
     t1.start()
-    async with serve(echo, "localhost", 9090):
+    async with serve(echo, "0.0.0.0", 9090):
         await asyncio.Future()  # run forever
 
 
