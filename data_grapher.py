@@ -1,66 +1,66 @@
+import base64
+import random
 import matplotlib.pyplot as plt
-import matplotlib.animation
 import numpy as np
-from mpl_toolkits import mplot3d
+from mpl_toolkits.mplot3d import Axes3D
+import io
+import time
 
-# creating the axis
-ax = plt.axes(projection="3d")
+from soil import SoilInfo
 
-# https://stackoverflow.com/questions/61791309/how-to-make-a-3d-plot-x-y-z-assigning-z-values-to-x-y-ordered-pairs
-# https://numpy.org/doc/stable/reference/generated/numpy.reshape.html
+plot_b64_data = ""
+
+# Initial z values
 zVals = []
 
-def update_plot():
-    # making a random z data points
-    i = 0;
-    step = 1;
-    while i / step < 100:
+# Making random z data points
+i = 0
+step = 1
+while i / step < 100:
+    zVals.append(0)
+    i += step
 
-        if i % 3 == 0:
-            zVals.append(i + 20)
-        elif i % 5 == 0:
-            zVals.append(2 * i)
-        else:
-            zVals.append(i)
-        i += step
+# Generalizing x and y
+sideLen = int(np.sqrt(len(zVals)))
+xVals = np.linspace(1, sideLen, sideLen)
+yVals = np.linspace(1, sideLen, sideLen)
+X, Y = np.meshgrid(xVals, yVals)
 
-    # generalizing x and y
-    sideLen = int(np.sqrt(len(zVals)))
-    xVals = np.linspace(1, sideLen, sideLen)
-    yVals = np.linspace(1, sideLen, sideLen)
 
-    X, Y = np.meshgrid(xVals, yVals)
-    # X and Y is the dimensions of the room, Z is height
-    # X, Y and Z are 2d arrays
+def update_plot(soil_info: SoilInfo, goodness: float):
+    global plot_b64_data
+    global zVals
 
-    ax.plot_surface(X, Y, np.array(zVals).reshape(sideLen, sideLen), rstride=1, cstride=1,
-                    cmap='viridis', edgecolor='none')
-    ax.set_title('Soil Goodness yeah yep');
+    # Create a new figure and axis for each update
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    ax.set_title(f'Soil Goodness yeah yep - {time.time()}')  # Add timestamp to ensure uniqueness
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     ax.set_zlabel('How good soil is')
-    plt.show()
 
-def animate(i, xs, ys, limit=0, verbose=False):
-    # grab the data
-    try:
-        data = get_data(DATA_FILENAME, BUFFER_LEN)
-        if verbose:
-            print(data)
-        x, y = map(float, data.split())
-        if x > xs[-1]:
-            # Add x and y to lists
-            xs.append(x)
-            ys.append(y)
-            # Limit x and y lists to 10 items
-            xs = xs[-limit:]
-            ys = ys[-limit:]
-        else:
-            print(f"W: {time.time()} :: STALE!")
-    except ValueError:
-        print(f"W: {time.time()} :: EXCEPTION!")
-    else:
-        # Draw x and y lists
-        ax.clear()
-        ax.set_ylim([0, 1])
-        ax.plot(xs, ys)
+    # Update zVals with new value
+    zVals[soil_info.coord_x + soil_info.coord_y * sideLen] = goodness  # Increased range for more noticeable changes
+
+    # Plot the updated surface
+    ax.plot_surface(X, Y, np.array(zVals).reshape(sideLen, sideLen), rstride=1, cstride=1,
+                    cmap='viridis', edgecolor='none')
+
+    # Save the plot to a binary data string
+    stream = io.BytesIO()
+    plt.savefig(stream, format='jpg')
+    stream.seek(0)
+    old_plot_data = plot_b64_data
+    plot_b64_data = base64.b64encode(stream.read()).decode()
+
+    print(f"PLOT DATA: {plot_b64_data}")
+
+    # Close the figure to avoid memory leaks
+    plt.close(fig)
+
+
+# returns binary data encoded in base 64 for the plot image in jpg form
+def get_plot_data():
+    global plot_b64_data
+    return plot_b64_data
