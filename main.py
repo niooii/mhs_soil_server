@@ -5,13 +5,14 @@ import asyncio
 import threading
 from websockets.server import serve
 from soil_handler import SoilInfo, calculate_goodness
+from data_grapher import update_plot
 import matplotlib
 
 
-def update_plot():
+def update_plot_loop():
     while True:
         time.sleep(0.5)
-        print("updated plot")
+        update_plot()
 
 
 async def echo(websocket):
@@ -20,6 +21,7 @@ async def echo(websocket):
         soil_info: SoilInfo = SoilInfo(message)
         soil_goodness: float = calculate_goodness(soil_info)
         print(f"soil goodness: {soil_goodness}")
+        await websocket.send(f"soil goodness: {soil_goodness}")
 
 
 async def main():
@@ -31,3 +33,7 @@ async def main():
 
 
 asyncio.run(main())
+
+
+
+
