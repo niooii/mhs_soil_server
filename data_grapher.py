@@ -16,7 +16,7 @@ zVals = []
 # Making random z data points
 i = 0
 step = 1
-while i / step < 100:
+for i in range(0, 25):
     zVals.append(0)
     i += step
 
@@ -41,7 +41,12 @@ def update_plot(soil_info: SoilInfo, goodness: float):
     ax.set_zlabel('How good soil is')
 
     # Update zVals with new value
-    zVals[soil_info.coord_x + soil_info.coord_y * sideLen] = goodness  # Increased range for more noticeable changes
+    index = int(soil_info.coord_x + soil_info.coord_y * sideLen);
+    zVals[index] = goodness  # Increased range for more noticeable changes
+    print(f"INDEX: {index}")
+    print(f"gpoodness: {goodness}")
+    # for i in range(0, 16):
+    #         zVals[i] = random.randint(0, 20)
 
     # Plot the updated surface
     ax.plot_surface(X, Y, np.array(zVals).reshape(sideLen, sideLen), rstride=1, cstride=1,
@@ -53,7 +58,7 @@ def update_plot(soil_info: SoilInfo, goodness: float):
     stream.seek(0)
     old_plot_data = plot_b64_data
     plot_b64_data = base64.b64encode(stream.read()).decode()
-
+    plt.show()
     print(f"PLOT DATA: {plot_b64_data}")
 
     # Close the figure to avoid memory leaks
